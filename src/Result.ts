@@ -21,6 +21,17 @@ function isAsyncResult<S, F>(result: GeneralResult<S, F>): result is AsyncResult
 /** 通常の結果または非同期処理を伴う結果のいずれか */
 type GeneralResult<S, F> = Result<S, F> | AsyncResult<S, F>;
 
+export namespace Result {
+  export const bind =
+    <S, F, SS>(nextAction: (successValue: S) => Result<SS, F>) =>
+    (result: Result<S, F>): Result<SS, F> => {
+      return match(result)
+        .with({ type: 'Success' }, (success) => nextAction(success.value))
+        .with({ type: 'Failure' }, (failure) => failure)
+        .exhaustive();
+    };
+}
+
 export namespace AsyncResult {
   export const bind =
     <S, F, SS>(nextAction: (successValue: S) => GeneralResult<SS, F>) =>
